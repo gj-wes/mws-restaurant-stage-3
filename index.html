@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#252831">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Critical CSS -->
+  <style>
+    @charset "utf-8";*,::after,::before{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;color:#333;line-height:1.5}body{background-color:#fdfdfd;margin:0;position:relative}ul{font-family:Arial,Helvetica,sans-serif;font-size:10pt;color:#333}a{color:orange;text-decoration:none}h1,h2{font-family:Arial,Helvetica,sans-serif;margin:0 0 20px}footer,header,nav,section{display:block}#maincontent{background-color:#f3f3f3;min-height:100%}#footer{position:relative;background-color:#252831;color:#fff;font-size:8pt;letter-spacing:1px;padding:25px;text-align:center;text-transform:uppercase}.skip-link{position:absolute;top:-40px;left:0;background:#f18200;color:#fff;padding:8px;z-index:1001}nav{width:100%;height:80px;display:flex;background-color:#252831;text-align:center}nav h1{margin:auto}nav h1 a{color:#fff;font-size:14pt;font-weight:200;letter-spacing:10px;text-transform:uppercase}#map{height:400px;width:100%;background-color:#ccc}.filter-options{width:100%;background-color:#207bbc;align-items:center}.filter-options h2{color:#fff;font-size:1.2rem;font-weight:400;line-height:1;padding-top:20px;margin:0 20px 15px 20px}.filter-options div{display:inline-block}.filter-options label{display:block;color:#fff;font-size:.9rem;font-weight:400;line-height:1;margin-left:20px}.filter-options select{background-color:#fff;border:1px solid #fff;font-family:Arial,sans-serif;font-size:11pt;height:35px;letter-spacing:0;margin:5px 20px 20px 20px;padding:0 10px;width:200px}#restaurants-list{display:flex;flex-wrap:wrap;background-color:#f3f3f3;list-style:outside none none;margin:0;padding:30px 15px;text-align:center}@media screen and (max-width:768px){#map-container{position:static;height:45vh;width:100%}#map{height:100%;width:100%}}@media screen and (max-width:414px){#map-container{height:30vh}#restaurants-list{padding:20px}}
+  </style>
+  <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
+  <link rel="stylesheet" href="css/styles.css">
+  <title>Restaurant Reviews</title>
+
+</head>
+
+<body>
+  <!-- Skip link - to allow keyboard user to skip over nav and google map -->
+  <a href="#restaurantinfoarea" class="skip-link" tabindex="0">Skip to Restaurant list</a>
+  <!-- header -->
+  <header>
+    <nav>
+      <h1><a href="/" tabindex="0">Restaurant Reviews</a></h1>
+    </nav>
+  </header>
+  <!-- main content -->
+  <main id="maincontent">
+    <!-- google map section-->
+    <section id="map-container">
+      <img id="static_map" onclick="swap_map()" src="https://maps.googleapis.com/maps/api/staticmap?center=40.7110087,-74.0294101&zoom=10&size=640x340&format=png&maptype=roadmap  &key=AIzaSyAP-FKVeyjmImaC8pWxhKSG5AQyLbGruXE&scale=2" style="max-width:100%;" alt="Map of New York">
+      <div id="map" role="application" aria-hidden="true" tabindex="-1"></div>
+    </section>
+    <!-- restaurant information section -->
+    <section id="restaurantinfoarea">
+      <!-- filter results module -->
+      <div class="filter-options">
+        <h2 tabindex="0">Filter Results</h2>
+        <div>
+          <label for="neighborhoods-select">Filter by neighborhood</label>
+          <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()" tabindex="0" role="listbox">
+            <option value="all">All Neighborhoods</option>
+          </select>
+        </div>
+        <div>
+          <label for="cuisines-select">Filter by cuisines</label>
+          <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()" tabindex="0" role="listbox">
+            <option value="all">All Cuisines</option>
+          </select>
+        </div>
+      </div>
+      <!-- restaurant list container - items generated through main.js -->
+      <ul id="restaurants-list"></ul>
+    </section>
+  </main>
+  <!-- footer -->
+  <footer id="footer">
+    Copyright (c) 2018 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.
+  </footer>
+
+  <!-- scripts -->
+  <script src="js/idb.js"></script>
+  <script src="js/lazysizes.min.js" async=""></script>
+  <script>
+    window.lazySizesConfig = window.lazySizesConfig || {};
+    window.lazySizesConfig.expand = 100;
+  </script>
+  <script src="js/dbhelper.js"></script>
+  <script src="js/main.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB3jnWAPjWZ9KSs0Tjv-5Yu17rh75of93Q&libraries=places&callback=initMap"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(function (registration) {
+          console.log('Registered:', registration);
+        })
+        .catch(function (error) {
+          console.log('Registration failed: ', error);
+        });
+      }
+  </script>
+
+</body>
+
+</html>
