@@ -24,24 +24,10 @@ window.initMap = () => {
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-  fetchReviewsFromURL();
+  fetchRestaurantFromURL(((error, restaurant) => {
+    fillRestaurantHTML(restaurant);
+  }));
 });
-
-/**
- * Fetch all reviews.
- */
-fetchReviews = () => {
-  DBHelper.fetchRestaurantReviews((error, reviews) => {
-    if (error) { // Got an error
-      console.error(error);
-    } else {
-      self.reviews = reviews;
-      // fill reviews
-      fillReviewsHTML();
-    }
-  });
-}
-
 /**
  * Get current restaurant from page URL.
  */
@@ -62,27 +48,6 @@ fetchRestaurantFromURL = (callback) => {
         return;
       }
       fillRestaurantHTML();
-      callback(null, restaurant)
-    });
-  }
-}
-
-/**
- * Get current reviews from page URL.
- */
-fetchReviewsFromURL = (callback) => {
-  const id = getParameterByName('id');
-  if (!id) { // no id found in URL
-    error = 'No review id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchReviewsById(id, (error, reviews) => {
-      self.reviews = reviews;
-      if (!reviews) {
-        console.error(error);
-        return;
-      }
-      fillReviewsHTML(reviews);
     });
   }
 }
@@ -91,6 +56,7 @@ fetchReviewsFromURL = (callback) => {
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
+  
   const name = document.getElementById('restaurant-name');
   if(restaurant.is_favorite) {
     name.innerHTML = restaurant.name + `<div class="fav-icon">★</div>`;
@@ -118,6 +84,9 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   if (restaurant.operating_hours) {
     fillRestaurantHoursHTML();
   }
+
+  // fill reviews
+  fillReviewsHTML(restaurant.reviews);
 }
 
 /**
@@ -172,9 +141,13 @@ createReviewHTML = (review) => {
   name.innerHTML = review.name;
   name.classList.add('review__name');
   li.appendChild(name);
-
+  
   const date = document.createElement('p');
-  date.innerHTML = `Date:${review.date}`;
+  let formattedDate = new Date(review.updatedAt);
+  let day = formattedDate.getDate();
+  let month = formattedDate.getMonth();
+  let year = formattedDate.getFullYear();
+  date.innerHTML = `${day}/${month}/${year}`;
   date.classList.add('review__date')
   li.appendChild(date);
 
@@ -265,6 +238,7 @@ markFavourite = () => {
           mode: 'cors'}
         )
         .then(res => res.json())
+        .then(IDBHelper.toggleFavouriteIDB(id));
 
         updateFavStyles(is_fav);
         
@@ -344,7 +318,7 @@ submitReview = () => {
     comments: text,
   };
 
-  addToCacheThenFetch(url, review);
+  addToCacheThenFetch(restaurant_id, url, review);
   
 
   // add new review to HTML
@@ -352,34 +326,14 @@ submitReview = () => {
   document.querySelector('#reviews-list').appendChild(newReview);
 }
 
-async function addToCacheThenFetch(url, data) {
+async function addToCacheThenFetch(id, url, data) {
 
-  await function cache(data) {
-    const dbPromise = idb.open('restaurants-reviews-db', 1, (upgradeDb) => {
-      switch (upgradeDb.oldVersion) {
-        case 0:
-          // a placeholder case so that the switch block will
-          // execute when the database is first created
-          // (oldVersion is 0)
-        case 1:
-          // create restaurants objectstore
-          upgradeDb.createObjectStore('reviews', {
-            keyPath: 'id'
-          });
-      }
-    });
-
-    dbPromise.then(db => {
-      const tx = db.transaction('reviews', 'readwrite');
-      tx.objectStore('reviews').put(data);
-      return tx.complete;
-    });
-  }
-
+  await IDBHelper.postReviewToIDB(id, data);
   await fetch(url, {
     body: JSON.stringify(data),
     method: 'POST',
     mode: 'cors'}
   )
   .then(res => res.json())
+  .then(() => {console.log('Review sent to database')})
 }

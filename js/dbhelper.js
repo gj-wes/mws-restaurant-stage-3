@@ -23,128 +23,10 @@ class DBHelper {
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    const dbPromise = idb.open('restaurants-db', 1, (upgradeDb) => {
-      switch (upgradeDb.oldVersion) {
-        case 0:
-          // a placeholder case so that the switch block will
-          // execute when the database is first created
-          // (oldVersion is 0)
-        case 1:
-          // create restaurants objectstore
-          upgradeDb.createObjectStore('restaurants', {
-            keyPath: 'id'
-          });
-      }
-    });
-
-    const createDB = (restaurants) => {
-      dbPromise.then((db) => {
-        const tx = db.transaction('restaurants', 'readwrite');
-        const store = tx.objectStore('restaurants');
-
-        return Promise.all(restaurants.map(function (restaurant) {
-            return store.add(restaurant);
-          }))
-          .catch((e) => {
-            tx.abort();
-            console.log(e);
-          })
-          .then(() => {
-            console.log('All restaurant data stored to IDB');
-          });
-      });
-    }
-
-    const getFromDB = (db) => {
-      dbPromise.then(db => {
-        return db.transaction('restaurants')
-          .objectStore('restaurants').getAll();
-      }).then(allRestaurants => {
-        // return allRestaurants;
-        return callback(null, allRestaurants);
-      }).catch(err => {
-        console.error(err);
-      });
-    }
-
-    fetch(DBHelper.DATABASE_URL_RESTAURANTS)
-      .then(res => res.json())
-      .then(data => {
-        const restaurants = data;
-        // create idb store with returned data
-        createDB(restaurants);
-        callback(null, restaurants);
-      })
-      .catch(err => {
-        // return cached data
-        console.error(err);
-        console.log('Unable to fetch data from server. Using cache data instead');
-        return getFromDB(callback);
-      });
+    IDBHelper.getRestaurantInfo(IDBHelper.dbPromise)
+      .then(restaurants => { return callback(null, restaurants) });
   }
-  /**
-   * Fetch all restaurant reviews.
-   */
-  static fetchRestaurantReviews(callback) {
-    const dbPromise = idb.open('restaurants-reviews-db', 1, (upgradeDb) => {
-      switch (upgradeDb.oldVersion) {
-        case 0:
-          // a placeholder case so that the switch block will
-          // execute when the database is first created
-          // (oldVersion is 0)
-        case 1:
-          // create restaurants objectstore
-          upgradeDb.createObjectStore('reviews', {
-            keyPath: 'id'
-          });
-      }
-    });
 
-    const createDB = (reviews) => {
-      dbPromise.then((db) => {
-        const tx = db.transaction('reviews', 'readwrite');
-        const store = tx.objectStore('reviews');
-
-        return Promise.all(reviews.map(function (review) {
-            return store.add(review);
-          }))
-          .catch((e) => {
-            tx.abort();
-            console.log(e);
-          })
-          .then(() => {
-            console.log('All review data stored to IDB');
-          });
-      });
-    }
-
-    const getFromDB = (db) => {
-      dbPromise.then(db => {
-        return db.transaction('reviews')
-          .objectStore('reviews').getAll();
-      }).then(allReviews => {
-        // return allReviews;
-        return callback(null, allReviews);
-      }).catch(err => {
-        console.error(err);
-      });
-    }
-
-    fetch(DBHelper.DATABASE_URL_REVIEWS)
-      .then(res => res.json())
-      .then(data => {
-        const reviews = data;
-        // create idb store with returned data
-        createDB(reviews);
-        callback(null, reviews);
-      })
-      .catch(err => {
-        // return cached data
-        console.error(err);
-        console.log('Unable to fetch data from server. Using cache data instead');
-        return getFromDB(callback);
-      });
-  }
 
   /**
    * Fetch a restaurant by its ID.
@@ -160,24 +42,6 @@ class DBHelper {
           callback(null, restaurant);
         } else { // Restaurant does not exist in the database
           callback('Restaurant does not exist', null);
-        }
-      }
-    });
-  }
-  /**
-   * Fetch a reviews by its ID.
-   */
-  static fetchReviewsById(restaurant_id, callback) {
-    // fetch all reviews with proper error handling.
-    DBHelper.fetchRestaurantReviews((error, reviews) => {
-      if (error) {
-        callback(error, null);
-      } else {
-        const review = reviews.filter(r => r.restaurant_id == restaurant_id);
-        if (review) { // Got the review
-          callback(null, review);
-        } else { // Review does not exist in the database
-          callback('Review does not exist', null);
         }
       }
     });

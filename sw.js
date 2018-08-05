@@ -1,6 +1,6 @@
 (function () {
   // cache name - updated when amended
-  const CACHE_NAME = 'static-cache-v3';
+  const CACHE_NAME = 'static-cache-v5';
   // assets to be cached
   const urlsToCache = [
     '.',
@@ -8,6 +8,7 @@
     'restaurant.html',
     'css/styles.css',
     'js/idb.js',
+    'js/idbhelper.js',
     'js/dbhelper.js',
     'js/main.js',
     'js/restaurant_info.js',
