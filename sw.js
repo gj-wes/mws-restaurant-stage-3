@@ -1,6 +1,6 @@
 (function () {
   // cache name - updated when amended
-  const CACHE_NAME = 'static-cache-v5';
+  const CACHE_NAME = 'static-cache-v7';
   // assets to be cached
   const urlsToCache = [
     '.',

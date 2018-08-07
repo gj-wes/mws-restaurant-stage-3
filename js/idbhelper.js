@@ -51,32 +51,24 @@ class IDBHelper {
   // toggle favourite
   static toggleFavouriteIDB(id) {
     IDBHelper.dbPromise.then(db => {
-      return db.transaction('restaurants', 'readwrite')
-        .objectStore('restaurants').get(Number(id));
-    }).then(res => {
-      // swap fav state
-      res.is_favorite = !res.is_favorite;
-
-      IDBHelper.dbPromise.then(db => {
-        return db.transaction('restaurants', 'readwrite')
-          .objectStore('restaurants').put(res);
-      })
+      const tx = db.transaction('restaurants', 'readwrite');
+      const store = tx.objectStore('restaurants')
+      store.get(Number(id)).then(res => {
+          res.is_favorite = !res.is_favorite;
+          store.put(res);
+        })
     });
-  };
+  }
   
   // post a review
   static postReviewToIDB(id, body) {
     IDBHelper.dbPromise.then(db => {
-      return db.transaction('restaurants', 'readwrite')
-        .objectStore('restaurants').get(Number(id));
-    }).then(res => {
-      // swap fav state
-      res.reviews.push(body);
-  
-      IDBHelper.dbPromise.then(db => {
-        return db.transaction('restaurants', 'readwrite')
-          .objectStore('restaurants').put(res);
-      }).then(() => {console.log('Review added to IDB')})
+      const tx = db.transaction('restaurants', 'readwrite')
+      const store = tx.objectStore('restaurants')
+      store.get(Number(id)).then(res => {
+        res.reviews.push(body);
+        store.put(res);
+      })
     });
   }
 }

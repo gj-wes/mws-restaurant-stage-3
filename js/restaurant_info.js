@@ -236,9 +236,7 @@ markFavourite = () => {
           body: JSON.stringify({is_favorite: is_fav}),
           method: 'POST',
           mode: 'cors'}
-        )
-        .then(res => res.json())
-        .then(IDBHelper.toggleFavouriteIDB(id));
+        ).then(IDBHelper.toggleFavouriteIDB(id));
 
         updateFavStyles(is_fav);
         
@@ -297,20 +295,21 @@ closeReviewForm = () => {
 
 // Submit review
 submitReview = () => {
+  
   const name = document.querySelector('#review-name').value;
   const text = document.querySelector('#review-text').value;
   const ratingInputs = Array.from(document.querySelectorAll('.leave-review-container input[type="radio"]'));
   const rating = ratingInputs.filter(r => r.checked);
   const ratingValue = rating[0].value;
   let restaurant_id = getParameterByName('id');
-
+  
   // close review form
   leaveReviewModal.classList.remove('open-modal');
   focusElementBeforeModal.focus();
-
+  
   // post to reviews db
   let url = `${DBHelper.DATABASE_URL_REVIEWS}/`;
-
+  
   let review = {
     restaurant_id: restaurant_id,
     name: name,
@@ -320,20 +319,37 @@ submitReview = () => {
 
   addToCacheThenFetch(restaurant_id, url, review);
   
-
   // add new review to HTML
   let newReview = createReviewHTML(review);
   document.querySelector('#reviews-list').appendChild(newReview);
 }
 
-async function addToCacheThenFetch(id, url, data) {
+function addToCacheThenFetch(id, url, data) {
 
-  await IDBHelper.postReviewToIDB(id, data);
-  await fetch(url, {
+  fetch(url, {
     body: JSON.stringify(data),
     method: 'POST',
     mode: 'cors'}
   )
-  .then(res => res.json())
-  .then(() => {console.log('Review sent to database')})
+  .then(IDBHelper.postReviewToIDB(id, data))
+  .catch(() => {storeAndSyncWhenOnline(data);})
+}
+
+function storeAndSyncWhenOnline(review) {
+  if (navigator.onLine) return;
+
+  localStorage.setItem('review', JSON.stringify(review));
+  console.log('No connection. Review stored and will sync when possible');
+
+  window.addEventListener('online', () => {
+      let data = JSON.parse(localStorage.getItem('data'));
+
+      if(data !== null) {
+        let url = `${DBHelper.DATABASE_URL_REVIEWS}/`;
+        addToCacheThenFetch(data.restaurant_id, url, data);
+        
+        // clear out localStorage after sync
+        localStorage.removeItem('data');
+      }
+  });
 }
