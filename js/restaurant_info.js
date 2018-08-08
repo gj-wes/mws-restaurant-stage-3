@@ -332,7 +332,7 @@ function addToCacheThenFetch(id, url, data) {
     mode: 'cors'}
   )
   .then(IDBHelper.postReviewToIDB(id, data))
-  .catch(() => {storeAndSyncWhenOnline(data);})
+  .catch(() => {storeAndSyncWhenOnline(data)})
 }
 
 function storeAndSyncWhenOnline(review) {
@@ -342,11 +342,16 @@ function storeAndSyncWhenOnline(review) {
   console.log('No connection. Review stored and will sync when possible');
 
   window.addEventListener('online', () => {
-      let data = JSON.parse(localStorage.getItem('data'));
-
+      let data = JSON.parse(localStorage.getItem('review'));
+      console.log(data, 'syncing review now');
       if(data !== null) {
-        let url = `${DBHelper.DATABASE_URL_REVIEWS}/`;
-        addToCacheThenFetch(data.restaurant_id, url, data);
+
+        fetch(`${DBHelper.DATABASE_URL_REVIEWS}/`, {
+          body: JSON.stringify(data),
+          method: 'POST',
+          mode: 'cors'}
+        )
+        .then(() => {console.log('review sent to database')});
         
         // clear out localStorage after sync
         localStorage.removeItem('data');
